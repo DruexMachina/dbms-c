@@ -27,6 +27,7 @@ extern void initStorageManager (void);
 extern RC createPageFile (char *fileName){
     int i;
     fopen(*fileName, "w");
+    fwrite(1); //totalNumPages
     for (i = 0; i < PAGE_SIZE, i++) {
         fwrite('\0');
     };
@@ -34,11 +35,18 @@ extern RC createPageFile (char *fileName){
 }
 extern RC openPageFile (char *fileName, SM_FileHandle *fHandle){
     fopen(*filename, "r");
-    fclose();
+    fhandle->*fileName = *fileName;
+    fhandle->totalNumPages = ; //read totalNumPages from start of file
+    fhandle->curPagePos = 0;
 }
 
-extern RC closePageFile (SM_FileHandle *fHandle);
-extern RC destroyPageFile (char *fileName);
+extern RC closePageFile (SM_FileHandle *fHandle){
+    fclose(fhandle->*fileName);
+}
+    
+extern RC destroyPageFile (char *fileName){
+    remove(fhandle->*fileName);
+}
 
 /* reading blocks from disc */
 extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage);
