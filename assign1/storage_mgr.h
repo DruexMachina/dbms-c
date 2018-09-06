@@ -32,7 +32,11 @@ extern RC createPageFile (char *fileName){
     };
     fclose();
 }
-extern RC openPageFile (char *fileName, SM_FileHandle *fHandle);
+extern RC openPageFile (char *fileName, SM_FileHandle *fHandle){
+    fopen(*filename, "r");
+    fclose();
+}
+
 extern RC closePageFile (SM_FileHandle *fHandle);
 extern RC destroyPageFile (char *fileName);
 
