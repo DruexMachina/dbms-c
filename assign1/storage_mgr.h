@@ -3,6 +3,10 @@
 
 #include "dberror.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 /************************************************************
  *                    handle data structures                *
  ************************************************************/
@@ -20,7 +24,14 @@ typedef char* SM_PageHandle;
  ************************************************************/
 /* manipulating page files */
 extern void initStorageManager (void);
-extern RC createPageFile (char *fileName);
+extern RC createPageFile (char *fileName){
+    int i;
+    fopen(*fileName, "w");
+    for (i = 0; i < PAGE_SIZE, i++) {
+        fwrite('\0');
+    };
+    fclose();
+}
 extern RC openPageFile (char *fileName, SM_FileHandle *fHandle);
 extern RC closePageFile (SM_FileHandle *fHandle);
 extern RC destroyPageFile (char *fileName);
