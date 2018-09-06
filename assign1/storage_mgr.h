@@ -26,24 +26,21 @@ typedef char* SM_PageHandle;
 extern void initStorageManager (void);
 extern RC createPageFile (char *fileName){
     int i;
-    typedef struct SM_
-    fopen(*fileName, "w");
+    fopen(fileName, "w");
     fwrite(1); //totalNumPages
-    for (i = 0; i < PAGE_SIZE; i++) {
-        fwrite('\0');
-    }
+    fwrite('\0', sizeof('\0'), PAGE_SIZE - sizeof(1), fileName);
     fclose();
 }
 extern RC openPageFile (char *fileName, SM_FileHandle *fHandle){
-    fopen(*fileName, "r");
-    fHandle->*fileName = *fileName;
-    fHandle->totalNumPages = ; //read totalNumPages from start of file
+    fopen(fileName, "r+");
+    fHandle->fileName = fileName;
+    fread(fHandle->totalNumPages, sizeof(fHandle->totalNumPages), 1, fileName); //read totalNumPages from start of file
     fHandle->curPagePos = 0;
 }
 
 extern RC closePageFile (SM_FileHandle *fHandle){
     fclose(fHandle->fileName);
-    //update metadata
+    //TO-DO: update metadata
 }
     
 extern RC destroyPageFile (char *fileName){
@@ -73,14 +70,12 @@ extern RC appendEmptyBlock (SM_FileHandle *fHandle) {
     fseek(fHandle->fileName, 1, fHandle->totalNumPages * PAGE_SIZE);
     fHandle->totalNumPages++;
     fwrite(fHandle->totalNumPages);
-    for (i = 0; i < PAGE_SIZE; i++) {
-        fwrite('\0');
-    }
+    fwrite('\0', sizeof('\0'), PAGE_SIZE - sizeof(fHandle->totalNumPages), fHandle->fileName);
 }
 extern RC ensureCapacity (int numberOfPages, SM_FileHandle *fHandle) {
     if (fHandle->totalNumPages < numberOfPages) {
         for (int i = 0; i < (numberOfPages - fHandle->totalNumPages); i++) {
-            appendEmptyBlock (fHandle);
+            appendEmptyBlock(fHandle);
         }
     }
 }
