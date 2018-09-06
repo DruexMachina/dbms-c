@@ -26,26 +26,25 @@ typedef char* SM_PageHandle;
 extern void initStorageManager (void);
 extern RC createPageFile (char *fileName){
     int i;
-    fopen(*fileName, "w");
+    fopen(fileName, "w");
     fwrite(1); //totalNumPages
-    for (i = 0; i < PAGE_SIZE, i++) {
-        fwrite('\0');
-    };
+    fwrite('\0', sizeof('\0'), PAGE_SIZE - sizeof(1), fileName);
     fclose();
 }
 extern RC openPageFile (char *fileName, SM_FileHandle *fHandle){
-    fopen(*filename, "r");
-    fhandle->*fileName = *fileName;
-    fhandle->totalNumPages = ; //read totalNumPages from start of file
-    fhandle->curPagePos = 0;
+    fopen(fileName, "r+");
+    fHandle->fileName = fileName;
+    fread(fHandle->totalNumPages, sizeof(fHandle->totalNumPages), 1, fileName); //read totalNumPages from start of file
+    fHandle->curPagePos = 0;
 }
 
 extern RC closePageFile (SM_FileHandle *fHandle){
-    fclose(fhandle->*fileName);
+    fclose(fHandle->fileName);
+    //TO-DO: update metadata
 }
     
 extern RC destroyPageFile (char *fileName){
-    remove(fhandle->*fileName);
+    remove(fileName);
 }
 
 /* reading blocks from disc */
@@ -91,9 +90,27 @@ extern RC readLastBlock (SM_FileHandle *fHandle, SM_PageHandle memPage){
     
 
 /* writing blocks to a page file */
-extern RC writeBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage);
-extern RC writeCurrentBlock (SM_FileHandle *fHandle, SM_PageHandle memPage);
-extern RC appendEmptyBlock (SM_FileHandle *fHandle);
-extern RC ensureCapacity (int numberOfPages, SM_FileHandle *fHandle);
+extern RC writeBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage) {
+    fseek(fHandle->fileName, 1, (pageNum - 1) * PAGE_SIZE);
+    fwrite(memPage, PAGE_SIZE, 1, fHandle->fileName);
+}
+extern RC writeCurrentBlock (SM_FileHandle *fHandle, SM_PageHandle memPage) {
+    fseek(fHandle->fileName, 1, fHandle->curPagePos * PAGE_SIZE);
+    fwrite(memPage, PAGE_SIZE, 1, fHandle->fileName);
+}
+extern RC appendEmptyBlock (SM_FileHandle *fHandle) {
+    int i;
+    fseek(fHandle->fileName, 1, fHandle->totalNumPages * PAGE_SIZE);
+    fHandle->totalNumPages++;
+    fwrite(fHandle->totalNumPages);
+    fwrite('\0', sizeof('\0'), PAGE_SIZE - sizeof(fHandle->totalNumPages), fHandle->fileName);
+}
+extern RC ensureCapacity (int numberOfPages, SM_FileHandle *fHandle) {
+    if (fHandle->totalNumPages < numberOfPages) {
+        for (int i = 0; i < (numberOfPages - fHandle->totalNumPages); i++) {
+            appendEmptyBlock(fHandle);
+        }
+    }
+}
 
 #endif
