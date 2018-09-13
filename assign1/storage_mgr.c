@@ -4,36 +4,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+
+using namespace std;
 
 /* manipulating page files */
 
-void initStorageManager (void){
-    return;
-}
-RC createPageFile (char *fileName, SM_MetaData *metadata){
-    metadata->db = fopen(fileName, "w+");
-    if (!metadata->db) {
+void initStorageManager (void){}
+RC createPageFile (char *fileName, SM_FileHandle *fHandle, SM_MetaData *metadata){
+    char null = '\0';
+    fHandle->db = fopen(fileName, "w+");
+    if (!fHandle->db) {
         return RC_FILE_NOT_FOUND;
     }
-    metadata -> totalNumPages = 1;
-    fwrite(metadata, sizeof(metadata), 1, metadata->db);
-    fwrite('\0', sizeof('\0'), PAGE_SIZE - sizeof(metadata), metadata->db);
-    fclose(metadata->db);
+    metadata->totalNumPages = 0;
+    appendEmptyBlock(fHandle, metadata);
+    fclose(fHandle->db);
     return RC_OK;
 }
 RC openPageFile (char *fileName, SM_FileHandle *fHandle, SM_MetaData *metadata){
-    metadata->db = fopen(fileName, "r+");
-    if (!metadata->db){
+    fHandle->db = fopen(fileName, "r+");
+    if (!fHandle->db){
         return RC_FILE_NOT_FOUND;
     } else {
         fHandle->fileName = fileName;
-        fread(metadata, sizeof(metadata), 1, metadata->db);
+        fread(metadata, sizeof(SM_MetaData), 1, fHandle->db);
         fHandle->curPagePos = 0;
         return RC_OK;
     }
 }
 RC closePageFile (SM_FileHandle *fHandle, SM_MetaData *metadata){
-    fclose(metadata->db);
+    fclose(fHandle->db);
 }
 RC destroyPageFile (char *fileName){
     remove(fileName);
@@ -44,7 +45,8 @@ RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage, SM_Met
     if(metadata->totalNumPages < pageNum){
         return RC_READ_NON_EXISTING_PAGE;
     } else {
-        fread(memPage, PAGE_SIZE - sizeof(metadata), metadata->totalNumPages, metadata->db);
+        fseek(fHandle->db, pageNum * PAGE_SIZE + sizeof(SM_MetaData), SEEK_SET);
+        fread(memPage, PAGE_SIZE, 1, fHandle->db);
         return RC_OK;
     }
 }
@@ -86,21 +88,25 @@ RC writeBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage, SM_Me
     if (pageNum >= metadata->totalNumPages) {
         return RC_WRITE_FAILED;
     } else {
-        fseek(metadata->db, 1, (pageNum - 1) * PAGE_SIZE);
-        fwrite(memPage, PAGE_SIZE, 1, metadata->db);
+        fseek(fHandle->db, pageNum * PAGE_SIZE + sizeof(SM_MetaData), SEEK_SET);
+        fwrite(memPage, PAGE_SIZE, 1, fHandle->db);
+        return RC_OK;
     }
 
 }
 RC writeCurrentBlock (SM_FileHandle *fHandle, SM_PageHandle memPage, SM_MetaData *metadata) {
-    fseek(metadata->db, 1 + sizeof(metadata), fHandle->curPagePos * PAGE_SIZE);
-    fwrite(memPage, PAGE_SIZE - sizeof(metadata), 1, metadata->db);
+    fseek(fHandle->db, 1 + sizeof(SM_MetaData), fHandle->curPagePos * PAGE_SIZE);
+    fwrite(memPage, PAGE_SIZE - sizeof(SM_MetaData), 1, fHandle->db);
     return RC_OK;
 }
 RC appendEmptyBlock (SM_FileHandle *fHandle, SM_MetaData *metadata) {
-    fseek(metadata->db, 1, metadata->totalNumPages * PAGE_SIZE);
+    char null = '\0';
+    fseek(fHandle->db, 0, SEEK_END);
     metadata->totalNumPages++;
-    fwrite(metadata, sizeof(metadata), 1, metadata->db);
-    fwrite('\0', sizeof('\0'), PAGE_SIZE - sizeof(metadata), metadata->db);
+    fwrite(metadata, sizeof(SM_MetaData), 1, fHandle->db);
+    for (int i = 1; i < PAGE_SIZE; i++) {
+        fwrite(&null, sizeof('\0'), 1, fHandle->db);
+    }
     return RC_OK;
 }
 RC ensureCapacity (int numberOfPages, SM_FileHandle *fHandle, SM_MetaData *metadata) {

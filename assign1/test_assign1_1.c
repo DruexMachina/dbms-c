@@ -42,11 +42,11 @@ testCreateOpenClose(void)
 
   testName = "test create open and close methods";
 
-  TEST_CHECK(createPageFile (TESTPF, &md));
+  TEST_CHECK(createPageFile (TESTPF, &fh, &md));
 
   TEST_CHECK(openPageFile (TESTPF, &fh, &md));
   ASSERT_TRUE(strcmp(fh.fileName, TESTPF) == 0, "filename correct");
-  ASSERT_TRUE((fh.totalNumPages == 1), "expect 1 page in new file");
+  ASSERT_TRUE((md.totalNumPages == 1), "expect 1 page in new file");
   ASSERT_TRUE((fh.curPagePos == 0), "freshly opened file's page position should be 0");
 
   TEST_CHECK(closePageFile (&fh, &md));
@@ -72,7 +72,7 @@ testSinglePageContent(void)
   ph = (SM_PageHandle) malloc(PAGE_SIZE);
 
   // create a new page file
-  TEST_CHECK(createPageFile (TESTPF, &md));
+  TEST_CHECK(createPageFile (TESTPF, &fh, &md));
   TEST_CHECK(openPageFile (TESTPF, &fh, &md));
   printf("created and opened file\n");
 

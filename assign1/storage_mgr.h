@@ -11,11 +11,11 @@ typedef struct SM_FileHandle {
     int totalNumPages;
     int curPagePos;
     void *mgmtInfo;
+    FILE *db;
 } SM_FileHandle;
 
 typedef struct SM_MetaData {
     int totalNumPages;
-    FILE* db;
 } SM_MetaData;
 
 typedef char* SM_PageHandle;
@@ -25,7 +25,7 @@ typedef char* SM_PageHandle;
  ************************************************************/
 /* manipulating page files */
 extern void initStorageManager (void);
-extern RC createPageFile (char *fileName, SM_MetaData *metadata);
+extern RC createPageFile (char *fileName, SM_FileHandle *fHandle, SM_MetaData *metadata);
 extern RC openPageFile (char *fileName, SM_FileHandle *fHandle, SM_MetaData *metadata);
 extern RC closePageFile (SM_FileHandle *fHandle, SM_MetaData *metadata);
 extern RC destroyPageFile (char *fileName);
