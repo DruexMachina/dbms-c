@@ -1,4 +1,4 @@
 # dbms-c
-[C++] School project; implementation of a database management system
+School project; implementation of a database management system
 
-- assign1/: The files necessary to implement and test a simple storage manager. assign1/storage_mgr.c contains the methods we developed.
+The directories contain the incremental construction of the DBMS; assign4 contains the final iteration (B+ tree index support)
